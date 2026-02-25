@@ -13,7 +13,7 @@ const features = [
   {
     icon: Grid,
     title: "Multi-frame Grid",
-    description: "Default 8×8 grid (64 frames). Click any cell to select and edit it instantly."
+    description: "Default 8x8 grid (64 frames). Click any cell to select and edit it instantly."
   },
   {
     icon: PenTool,
@@ -54,26 +54,27 @@ const features = [
 
 export function Features() {
   return (
-    <section id="features" className="py-24 bg-zinc-900 border-t border-white/5">
+    <section id="features" className="py-24 bg-[#f1ebe1] border-y border-black/5">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Powerful Features</h2>
-          <p className="text-zinc-400 max-w-2xl mx-auto">
-            Everything you need to design complex, evolving wavetables for your music production.
+          <p className="text-xs uppercase tracking-[0.3em] text-emerald-600 font-semibold">Features</p>
+          <h2 className="text-3xl md:text-4xl font-bold text-[#1f1b16] mt-3">Built for shaping complex motion</h2>
+          <p className="text-[#5b5346] max-w-2xl mx-auto mt-4">
+            Every tool is tuned for fast experimentation, clean iteration, and confident export to your DAW.
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {features.map((feature, index) => (
-            <div 
+            <div
               key={index}
-              className="bg-zinc-950/50 border border-white/5 p-6 rounded-xl hover:border-emerald-500/30 transition-colors group"
+              className="bg-white/70 border border-black/10 p-6 rounded-2xl shadow-sm hover:shadow-lg transition group"
             >
-              <div className="w-12 h-12 bg-zinc-900 rounded-lg flex items-center justify-center mb-4 group-hover:bg-emerald-500/10 transition-colors">
-                <feature.icon className="w-6 h-6 text-emerald-500" />
+              <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center mb-4 group-hover:bg-emerald-200 transition-colors">
+                <feature.icon className="w-6 h-6 text-emerald-700" />
               </div>
-              <h3 className="text-lg font-semibold text-white mb-2">{feature.title}</h3>
-              <p className="text-zinc-400 text-sm leading-relaxed">
+              <h3 className="text-lg font-semibold text-[#1f1b16] mb-2">{feature.title}</h3>
+              <p className="text-[#5b5346] text-sm leading-relaxed">
                 {feature.description}
               </p>
             </div>
