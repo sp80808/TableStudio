@@ -37,11 +37,25 @@ pub fn draw_ui(
         .show(ctx, |ui| {
             ui.heading("Frames");
             ui.separator();
-            grid::draw_frame_grid(ui, &mut state_guard);
+            if grid::draw_frame_grid(ui, &mut state_guard) {
+                needs_bake = true;
+            }
         });
 
     egui::CentralPanel::default().show(ctx, |ui| {
         ui.heading("TableStudio Wavetable Designer");
+        ui.horizontal(|ui| {
+            let total_frames = state_guard.frames.len();
+            let active_index = state_guard.active_frame + 1;
+            ui.label(format!("Active Frame: {}/{}", active_index, total_frames));
+            let frame = state_guard.active_frame_mut();
+            if ui
+                .toggle_value(&mut frame.is_keyframe, "Keyframe")
+                .changed()
+            {
+                // no-op for now, keyframes used for future morphing
+            }
+        });
 
         ui.horizontal(|ui| {
             if ui.button("Import WAV").clicked() {
@@ -50,7 +64,10 @@ pub fn draw_ui(
                     .pick_file()
                 {
                     match import_wavetable(&path, &mut state_guard) {
-                        Ok(msg) => status_msg = Some(msg),
+                        Ok(msg) => {
+                            status_msg = Some(msg);
+                            needs_bake = true;
+                        }
                         Err(err) => status_msg = Some(err),
                     }
                 }
@@ -132,7 +149,72 @@ pub fn draw_ui(
                 ui.horizontal(|ui| {
                     if crate::widgets::synth_knob(ui, &mut state_guard.fundamental_boost, 0.0..=2.0, "Fund. Boost").changed() { needs_bake = true; }
                     if crate::widgets::synth_knob(ui, &mut state_guard.wavefold_amount, 0.0..=1.0, "Wavefold").changed() { needs_bake = true; }
+                    if crate::widgets::synth_knob(ui, &mut state_guard.spectral_smear, 0.0..=1.0, "Smear").changed() { needs_bake = true; }
+                    if crate::widgets::synth_knob(ui, &mut state_guard.spectral_warp, -1.0..=1.0, "Warp").changed() { needs_bake = true; }
                 });
+                ui.horizontal(|ui| {
+                    if crate::widgets::synth_knob(ui, &mut state_guard.spectral_stretch, 0.0..=1.0, "Stretch").changed() { needs_bake = true; }
+                    if crate::widgets::synth_knob(ui, &mut state_guard.spectral_formant, -1.0..=1.0, "Formant").changed() { needs_bake = true; }
+                });
+            });
+        });
+
+        ui.separator();
+
+        ui.group(|ui| {
+            ui.heading("Spectral Morph (WIP)");
+            ui.label("Controls reserved for upcoming spectral processing.");
+            ui.horizontal_wrapped(|ui| {
+                if crate::widgets::synth_knob(
+                    ui,
+                    &mut state_guard.spectral_morph_amount,
+                    0.0..=1.0,
+                    "Morph",
+                )
+                .changed()
+                {
+                    needs_bake = true;
+                }
+                if crate::widgets::synth_knob(
+                    ui,
+                    &mut state_guard.spectral_formant,
+                    -1.0..=1.0,
+                    "Formant",
+                )
+                .changed()
+                {
+                    needs_bake = true;
+                }
+                if crate::widgets::synth_knob(
+                    ui,
+                    &mut state_guard.spectral_smear,
+                    0.0..=1.0,
+                    "Smear",
+                )
+                .changed()
+                {
+                    needs_bake = true;
+                }
+                if crate::widgets::synth_knob(
+                    ui,
+                    &mut state_guard.spectral_stretch,
+                    0.0..=2.0,
+                    "Stretch",
+                )
+                .changed()
+                {
+                    needs_bake = true;
+                }
+                if crate::widgets::synth_knob(
+                    ui,
+                    &mut state_guard.spectral_warp,
+                    -1.0..=1.0,
+                    "Warp",
+                )
+                .changed()
+                {
+                    needs_bake = true;
+                }
             });
         });
 
@@ -145,7 +227,9 @@ pub fn draw_ui(
             ui.label(msg);
         }
 
-        handle_file_drop(ctx, &mut state_guard, &mut status_msg);
+        if handle_file_drop(ctx, &mut state_guard, &mut status_msg) {
+            needs_bake = true;
+        }
     });
 
     if needs_bake {
@@ -157,18 +241,24 @@ fn handle_file_drop(
     ctx: &egui::Context,
     state: &mut WtState,
     status_msg: &mut Option<String>,
-) {
+) -> bool {
+    let mut changed = false;
     if !ctx.input(|i| i.raw.dropped_files.is_empty()) {
         let files = ctx.input(|i| i.raw.dropped_files.clone());
         if let Some(file) = files.first() {
             if let Some(path) = &file.path {
                 match import_wavetable(path, state) {
-                    Ok(msg) => *status_msg = Some(msg),
+                    Ok(msg) => {
+                        *status_msg = Some(msg);
+                        changed = true;
+                    }
                     Err(err) => *status_msg = Some(err),
                 }
             }
         }
     }
+
+    changed
 }
 
 fn import_wavetable(path: &Path, state: &mut WtState) -> Result<String, String> {

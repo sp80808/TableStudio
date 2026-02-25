@@ -26,7 +26,7 @@ pub fn draw_preview_panel(
 
     ui.horizontal(|ui| {
         ui.label("Mode:");
-        egui::ComboBox::from_id_source("preview_mode")
+        egui::ComboBox::new("preview_mode", "")
             .selected_text(state.preview_mode.label())
             .show_ui(ui, |ui| {
                 ui.selectable_value(&mut state.preview_mode, PreviewMode::Off, "Off");
@@ -39,10 +39,12 @@ pub fn draw_preview_panel(
         ui.horizontal(|ui| {
             ui.label("Note:");
             note_picker(ui, &mut state.preview_note);
-            ui.add(DragValue::new(&mut state.preview_detune_cents)
-                .clamp_range(-50.0..=50.0)
-                .speed(0.5)
-                .suffix(" cents"));
+            ui.add(
+                DragValue::new(&mut state.preview_detune_cents)
+                    .range(-50.0..=50.0)
+                    .speed(0.5)
+                    .suffix(" cents"),
+            );
         });
 
         let freq = note_to_freq(state.preview_note, state.preview_detune_cents);
@@ -62,7 +64,7 @@ fn note_picker(ui: &mut egui::Ui, note: &mut u8) {
     let octave = (*note as i32 / 12) - 1; // MIDI note 0 = C-1
     let note_index = (*note as usize) % 12;
 
-    egui::ComboBox::from_id_source("preview_note_name")
+    egui::ComboBox::new("preview_note_name", "")
         .selected_text(format!("{}{}", NOTE_NAMES[note_index], octave))
         .show_ui(ui, |ui| {
             for octave in -1..=8 {
