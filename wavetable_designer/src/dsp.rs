@@ -253,6 +253,75 @@ pub fn spectral_morph_preview(a: &[f32], b: &[f32], amount: f32) -> Vec<f32> {
     out
 }
 
+pub fn apply_spectral_fx(samples: &mut [f32], state: &WtState) {
+    let mut bins = forward_fft(samples);
+    let len = bins.len();
+    if len <= 1 { return; }
+    
+    let half = len / 2;
+    let mut polar: Vec<(f32, f32)> = bins.iter().map(|c| (c.norm(), c.arg())).collect();
+    
+    if state.spectral_smear > 0.001 {
+        let mut blurred = polar.clone();
+        let smear_bins = (state.spectral_smear * 15.0) as usize;
+        for i in 1..half {
+            let mut sum_mag = 0.0;
+            let mut count = 0;
+            let start = i.saturating_sub(smear_bins).max(1);
+            let end = (i + smear_bins).min(half - 1);
+            for j in start..=end {
+                sum_mag += polar[j].0;
+                count += 1;
+            }
+            if count > 0 {
+                blurred[i].0 = sum_mag / count as f32;
+            }
+        }
+        polar = blurred;
+    }
+
+    if state.spectral_warp != 0.0 || state.spectral_stretch > 0.001 {
+        let mut warped = vec![(0.0, 0.0); len];
+        for i in 1..half {
+            let norm_x = i as f32 / half as f32;
+            let stretch_amt = state.spectral_stretch * 0.9; 
+            let warp_factor = if state.spectral_warp >= 0.0 {
+                1.0 + state.spectral_warp * 3.0
+            } else {
+                1.0 / (1.0 - state.spectral_warp * 3.0)
+            };
+            let mapped_x = norm_x.powf(warp_factor) * (1.0 - stretch_amt).max(0.1);
+            let mapped_i = (mapped_x * half as f32) as usize;
+            if mapped_i > 0 && mapped_i < half {
+                warped[mapped_i].0 += polar[i].0;
+                warped[mapped_i].1 = polar[i].1; 
+            }
+        }
+        polar = warped;
+    }
+
+    if state.spectral_formant != 0.0 {
+        let shift = (state.spectral_formant * 30.0) as isize;
+        let mut shifted = vec![(0.0, 0.0); len];
+        for i in 1..half {
+            let target = i as isize + shift;
+            if target > 0 && target < half as isize {
+                shifted[target as usize] = polar[i];
+            }
+        }
+        polar = shifted;
+    }
+
+    for i in 1..half {
+        bins[i] = Complex::from_polar(polar[i].0, polar[i].1);
+    }
+    
+    enforce_conjugate_symmetry(&mut bins);
+    let out = inverse_fft(&bins);
+    samples.copy_from_slice(&out);
+}
+
+
 fn normalize_samples_in_place(samples: &mut [f32]) {
     let mut max_val: f32 = 0.0;
     for &s in samples.iter() {

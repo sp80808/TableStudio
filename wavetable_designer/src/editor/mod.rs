@@ -139,6 +139,12 @@ pub fn draw_ui(
                 ui.horizontal(|ui| {
                     if crate::widgets::synth_knob(ui, &mut state_guard.fundamental_boost, 0.0..=2.0, "Fund. Boost").changed() { needs_bake = true; }
                     if crate::widgets::synth_knob(ui, &mut state_guard.wavefold_amount, 0.0..=1.0, "Wavefold").changed() { needs_bake = true; }
+                    if crate::widgets::synth_knob(ui, &mut state_guard.spectral_smear, 0.0..=1.0, "Smear").changed() { needs_bake = true; }
+                    if crate::widgets::synth_knob(ui, &mut state_guard.spectral_warp, -1.0..=1.0, "Warp").changed() { needs_bake = true; }
+                });
+                ui.horizontal(|ui| {
+                    if crate::widgets::synth_knob(ui, &mut state_guard.spectral_stretch, 0.0..=1.0, "Stretch").changed() { needs_bake = true; }
+                    if crate::widgets::synth_knob(ui, &mut state_guard.spectral_formant, -1.0..=1.0, "Formant").changed() { needs_bake = true; }
                 });
             });
         });

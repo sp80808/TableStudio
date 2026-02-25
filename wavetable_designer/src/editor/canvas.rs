@@ -1,6 +1,5 @@
-use crate::app_state::{WtState, WT_SIZE};
 use crate::dsp::{
-    apply_fm_stack, compute_harmonics, enforce_conjugate_symmetry, fft_clear_all, fft_clear_hf,
+    apply_fm_stack, compute_harmonics, fft_clear_all, fft_clear_hf,
     fft_clear_lf, fft_draw_even_only, fft_draw_odd_only, fft_generate_saw, fft_randomize_bins,
     forward_fft, inverse_fft, spectral_morph_preview,
 };
@@ -130,14 +129,6 @@ fn draw_harmonics(ui: &mut egui::Ui, state: &mut WtState) -> bool {
     // Context menu for FFT Operations
     response.context_menu(|ui| {
         ui.menu_button("FFT Operations", |ui| {
-            let process_fft = |ui: &mut egui::Ui, name: &str, mut op: impl FnMut(&mut [num_complex::Complex<f32>])| -> bool {
-                if ui.button(name).clicked() {
-                    ui.close_menu();
-                    return true;
-                }
-                false
-            };
-
             let mut run_op = None;
 
             if ui.button("Clear All").clicked() { run_op = Some(0); }
