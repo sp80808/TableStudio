@@ -1,0 +1,5 @@
+{
+  "name": "TableStudio",
+  "description": "Open-source wavetable workstation and synthesizer plugin built on NIH-plug and egui.",
+  "requestFramePermissions": []
+}
