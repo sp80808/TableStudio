@@ -50,7 +50,12 @@ fn draw_frame_preview(
     } else {
         Color32::from_gray(50)
     };
-    painter.rect_stroke(rect, 3.0, Stroke::new(1.0, border_color));
+    painter.rect_stroke(
+        rect,
+        3.0,
+        Stroke::new(1.0, border_color),
+        egui::StrokeKind::Inside,
+    );
 
     let mut points = Vec::with_capacity(WT_SIZE);
     for (i, &sample) in frame.baked.iter().enumerate() {

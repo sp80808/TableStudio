@@ -44,6 +44,11 @@ fn bake_frame(raw: &[f32], state: &WtState) -> Vec<f32> {
     baked
 }
 
+fn apply_spectral_fx(_samples: &mut [f32], _state: &WtState) {
+    // Placeholder for upcoming spectral processing (formant, smear, stretch, warp).
+    // Kept as a no-op for now to preserve the control surface without changing audio.
+}
+
 pub fn apply_fm_stack(raw: &[f32], ratio: f32, amount: f32, mod_shape: usize) -> Vec<f32> {
     let len = raw.len();
     if len == 0 {
