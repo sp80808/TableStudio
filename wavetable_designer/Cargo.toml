@@ -1,0 +1,39 @@
+[package]
+name = "wavetable_designer"
+version = "0.1.0"
+edition = "2021"
+authors = ["Antigravity Master Agent <antigravity@tablestudio.ai>"]
+license = "GPL-3.0-or-later"
+homepage = "https://tablestudio.ai"
+description = "TableStudio Wavetable Designer"
+
+[workspace]
+members = ["xtask"]
+
+[lib]
+crate-type = ["cdylib", "lib"]
+
+[[bin]]
+name = "wavetable_designer"
+path = "src/main.rs"
+
+[dependencies]
+nih_plug = { git = "https://github.com/robbert-vdh/nih-plug.git", features = ["assert_process_allocs", "standalone"] }
+nih_plug_egui = { git = "https://github.com/robbert-vdh/nih-plug.git" }
+hound = "3.5"
+parking_lot = "0.12"
+rfd = "0.15"
+rustfft = "6"
+num-complex = "0.4"
+cpal = "0.15"
+tempfile = "3"
+egui_plot = "0.27" # Using 0.27 to align with typical nih-plug egui bounds, will adapt if needed.
+
+[profile.release]
+lto = "thin"
+strip = "symbols"
+
+[profile.profiling]
+inherits = "release"
+debug = true
+strip = "none"
