@@ -1,3 +1,9 @@
+//! Top-level editor layout, WAV import/export helpers, and file-drop handling.
+//!
+//! [`draw_ui`] is the single entry point called by the NIH-plug egui editor
+//! closure on every frame.  It locks [`WtState`], renders all panels, then
+//! calls [`bake_wavetable`] if any parameter changed.
+
 use crate::app_state::{MorphMode, WtState, WT_SIZE};
 use crate::dsp::{bake_wavetable, execute_morph};
 use crate::WtParams;
@@ -11,6 +17,10 @@ mod canvas;
 mod grid;
 mod preview;
 
+/// Renders the complete plugin UI for one egui frame.
+///
+/// Acquires the state mutex, draws all panels (frame grid, canvas, FM pipeline,
+/// BassForge, preview), then triggers a bake if any parameter was modified.
 pub fn draw_ui(
     ctx: &egui::Context,
     setter: &nih_plug::prelude::ParamSetter,

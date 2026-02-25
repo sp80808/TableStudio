@@ -3,6 +3,14 @@ use num_complex::Complex;
 use rustfft::FftPlanner;
 use std::f32::consts::TAU;
 
+/// Runs the full bake pipeline on the active frame and writes the result to
+/// `frame.baked`.
+///
+/// The pipeline applies, in order:
+/// 1. 2-op FM stacking (modulates the carrier phase using a separate oscillator).
+/// 2. Fundamental boost (adds a sine wave at the fundamental frequency).
+/// 3. Wavefolding (sine-based soft fold).
+/// 4. Peak normalisation (if the output exceeds ±1).
 pub fn bake_wavetable(state: &mut WtState) {
     let raw = state.active_frame().raw.clone();
     let baked = bake_frame(&raw, state);
@@ -107,12 +115,20 @@ pub fn compute_harmonics(samples: &[f32]) -> Vec<f32> {
         .collect()
 }
 
+/// Converts a MIDI note number plus a fine-tune offset in cents to a frequency
+/// in Hz using the standard equal-temperament formula.
+///
+/// `detune_cents` of ±1200 is equivalent to ±one octave.
 pub fn note_to_freq(note: u8, detune_cents: f32) -> f32 {
     let base = nih_plug::util::midi_note_to_freq(note);
     let ratio = 2.0_f32.powf(detune_cents / 1200.0);
     base * ratio
 }
 
+/// Computes the forward (analysis) FFT of `samples` and returns the complex
+/// frequency-domain bins.
+///
+/// Returns an empty `Vec` if `samples` is empty.
 pub fn forward_fft(samples: &[f32]) -> Vec<Complex<f32>> {
     let len = samples.len();
     if len == 0 {
@@ -128,6 +144,11 @@ pub fn forward_fft(samples: &[f32]) -> Vec<Complex<f32>> {
     buffer
 }
 
+/// Computes the inverse FFT of `bins` and returns the real-valued time-domain
+/// samples, scaled by `1 / N` to invert the forward transform.
+///
+/// Returns an empty `Vec` if `bins` is empty.
+#[allow(dead_code)]
 pub fn inverse_fft(bins: &[Complex<f32>]) -> Vec<f32> {
     let len = bins.len();
     if len == 0 {
@@ -142,6 +163,12 @@ pub fn inverse_fft(bins: &[Complex<f32>]) -> Vec<f32> {
     buffer.iter().map(|c| c.re * scale).collect()
 }
 
+/// Enforces Hermitian (conjugate) symmetry on a complex FFT bin array so that
+/// its inverse transform yields a purely real-valued signal.
+///
+/// Sets `bins[N-i] = conj(bins[i])` for `i` in `1..N/2`, and zeroes the
+/// imaginary parts of DC (bin 0) and the Nyquist bin (bin N/2 when N is even).
+#[allow(dead_code)]
 pub fn enforce_conjugate_symmetry(bins: &mut [Complex<f32>]) {
     let len = bins.len();
     if len <= 1 {

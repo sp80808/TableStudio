@@ -1,3 +1,9 @@
+//! Preview mode selector, note picker, and gain slider panel.
+//!
+//! Allows the user to switch between Off / Edit-Drone / MIDI preview modes,
+//! choose the drone note and detune offset, and set the master preview gain
+//! via the NIH-plug parameter slider.
+
 use crate::app_state::{PreviewMode, WtState};
 use crate::dsp::note_to_freq;
 use crate::WtParams;
@@ -8,6 +14,8 @@ const NOTE_NAMES: [&str; 12] = [
     "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B",
 ];
 
+/// Renders the Preview section: mode combo-box, note picker (Edit-Drone only),
+/// detune drag-value, current frequency readout, and the Preview Gain slider.
 pub fn draw_preview_panel(
     ui: &mut egui::Ui,
     state: &mut WtState,

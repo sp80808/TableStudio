@@ -1,7 +1,21 @@
+//! Custom egui widgets for the Wavetable Designer UI.
+
 use nih_plug_egui::egui::{self, Color32, Response, Sense, Stroke, Ui, Vec2};
 
-/// A premium, well-documented Synth Knob widget in the style of Serum/Vital.
-/// Perfect for BassForge and FM Injector controls.
+/// A rotary knob widget styled after hardware synthesiser controls.
+///
+/// # Behaviour
+/// - **Drag up/down** — adjusts `value` proportionally to the range span
+///   (150 px of drag = full range).
+/// - **Double-click** — resets to `0.0` if the range contains zero, otherwise
+///   resets to `range.start()`.
+///
+/// # Visuals
+/// - Dark outer ring with an orange arc showing the current value.
+/// - White tick-mark indicator at the current angle.
+/// - Label and current value shown below the knob.
+///
+/// Returns the egui [`Response`] so callers can check `.changed()`.
 pub fn synth_knob(
     ui: &mut Ui,
     value: &mut f32,
