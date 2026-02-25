@@ -1,3 +1,12 @@
+//! Waveform draw canvas and harmonics bar-chart view.
+//!
+//! The canvas shows the active frame's raw (blue) and baked (orange) waveforms
+//! side-by-side.  Dragging on the canvas writes new sample values to
+//! `frame.raw` with light neighbour smoothing, and sets `WtState::edit_gate`
+//! so the Edit-Drone preview sounds while the mouse button is held.
+
+use crate::app_state::{WtState, WT_SIZE};
+use crate::dsp::compute_harmonics;
 use crate::dsp::{
     apply_fm_stack, compute_harmonics, fft_clear_all, fft_clear_hf,
     fft_clear_lf, fft_draw_even_only, fft_draw_odd_only, fft_generate_saw, fft_randomize_bins,
@@ -9,6 +18,9 @@ const Y_SCALE: f32 = 0.45;
 const GRID_DIVS: usize = 8;
 const HARMONICS_BINS: usize = 128;
 
+/// Draws the waveform canvas and harmonics view, handles drag-to-edit input,
+/// and returns `true` if the raw waveform was modified (indicating a bake is
+/// required).
 pub fn draw_canvas(ui: &mut egui::Ui, _ctx: &egui::Context, state: &mut WtState) -> bool {
     let mut needs_bake = false;
 
