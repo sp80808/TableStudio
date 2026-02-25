@@ -13,7 +13,6 @@ const PREVIEW_HEIGHT: f32 = 36.0;
 /// Each cell is an 80×36 px thumbnail showing the frame's baked waveform.
 /// The active frame is highlighted with a blue background.  Clicking any cell
 /// updates `state.active_frame`.
-pub fn draw_frame_grid(ui: &mut egui::Ui, state: &mut WtState) {
 pub fn draw_frame_grid(ui: &mut egui::Ui, state: &mut WtState) -> bool {
     let rows = state.grid_rows.max(1);
     let cols = state.grid_cols.max(1);
