@@ -1,4 +1,7 @@
-use crate::app_state::{MorphMode, PreviewMode, WavetableFrame, WtState, WT_SIZE};
+use crate::app_state::{
+    FmAlgorithm, FmModMode, FmOperator, FmWave, MorphMode, PreviewMode, WavetableFrame, WtState,
+    FM_OPS, WT_SIZE,
+};
 use num_complex::Complex;
 use rustfft::FftPlanner;
 use std::f32::consts::TAU;

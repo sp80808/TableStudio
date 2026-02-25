@@ -68,7 +68,7 @@ pub fn draw_ui(
                             status_msg = Some(msg);
                             needs_bake = true;
                         }
-                        Err(err) => status_msg = Some(err),
+                        Err(err) => status_msg = Some(format!("Error: {:#}", err)),
                     }
                 }
             }
@@ -80,7 +80,7 @@ pub fn draw_ui(
                 {
                     match export_current_frame(&path, &state_guard) {
                         Ok(msg) => status_msg = Some(msg),
-                        Err(err) => status_msg = Some(err),
+                        Err(err) => status_msg = Some(format!("Error: {:#}", err)),
                     }
                 }
             }
@@ -92,7 +92,7 @@ pub fn draw_ui(
                 {
                     match export_all_frames(&path, &state_guard) {
                         Ok(msg) => status_msg = Some(msg),
-                        Err(err) => status_msg = Some(err),
+                        Err(err) => status_msg = Some(format!("Error: {:#}", err)),
                     }
                 }
             }
@@ -256,6 +256,8 @@ pub fn draw_ui(
     }
 }
 
+use anyhow::{Context, Result};
+
 fn handle_file_drop(
     ctx: &egui::Context,
     state: &mut WtState,
@@ -271,7 +273,7 @@ fn handle_file_drop(
                         *status_msg = Some(msg);
                         changed = true;
                     }
-                    Err(err) => *status_msg = Some(err),
+                    Err(err) => *status_msg = Some(format!("Error: {:#}", err)),
                 }
             }
         }
@@ -280,7 +282,7 @@ fn handle_file_drop(
     changed
 }
 
-fn import_wavetable(path: &Path, state: &mut WtState) -> Result<String, String> {
+fn import_wavetable(path: &Path, state: &mut WtState) -> Result<String> {
     let samples = load_wav_mono(path)?;
 
     if samples.len() >= WT_SIZE {
@@ -308,43 +310,43 @@ fn import_wavetable(path: &Path, state: &mut WtState) -> Result<String, String> 
     }
 }
 
-fn export_current_frame(path: &Path, state: &WtState) -> Result<String, String> {
+fn export_current_frame(path: &Path, state: &WtState) -> Result<String> {
     let frame = state.active_frame();
-    write_wav(path, &frame.baked)?;
+    write_wav(path, &frame.baked).with_context(|| format!("Failed to export current frame to {}", path.display()))?;
     Ok(format!("Exported current frame to {}", path.display()))
 }
 
-fn export_all_frames(path: &Path, state: &WtState) -> Result<String, String> {
+fn export_all_frames(path: &Path, state: &WtState) -> Result<String> {
     let mut data = Vec::with_capacity(state.frames.len() * WT_SIZE);
     for frame in &state.frames {
         data.extend_from_slice(&frame.baked);
     }
-    write_wav(path, &data)?;
+    write_wav(path, &data).with_context(|| format!("Failed to export all frames to {}", path.display()))?;
     Ok(format!("Exported all frames to {}", path.display()))
 }
 
-fn load_wav_mono(path: &Path) -> Result<Vec<f32>, String> {
+fn load_wav_mono(path: &Path) -> Result<Vec<f32>> {
     let mut reader = hound::WavReader::open(path)
-        .map_err(|err| format!("Failed to open WAV: {err}"))?;
+        .with_context(|| format!("Failed to open WAV: {}", path.display()))?;
     let spec = reader.spec();
     let channels = spec.channels.max(1) as usize;
 
     let raw: Vec<f32> = match spec.sample_format {
         SampleFormat::Float => reader
             .samples::<f32>()
-            .map(|s| s.map_err(|e| e.to_string()))
+            .map(|s| s.map_err(|e| anyhow::anyhow!("Sample read error: {}", e)))
             .collect::<Result<_, _>>()?,
         SampleFormat::Int => {
             let max_amplitude = (1u64 << (spec.bits_per_sample.saturating_sub(1))) as f32;
             reader
                 .samples::<i32>()
-                .map(|s| s.map(|v| v as f32 / max_amplitude).map_err(|e| e.to_string()))
+                .map(|s| s.map(|v| v as f32 / max_amplitude).map_err(|e| anyhow::anyhow!("Sample read error: {}", e)))
                 .collect::<Result<_, _>>()?
         }
     };
 
     if raw.is_empty() {
-        return Err("WAV contains no samples".to_string());
+        return Err(anyhow::anyhow!("WAV contains no samples"));
     }
 
     let mut mono = Vec::with_capacity(raw.len() / channels);
@@ -380,7 +382,7 @@ fn resample_to_len(samples: &[f32], target_len: usize) -> Vec<f32> {
     out
 }
 
-fn write_wav(path: &Path, data: &[f32]) -> Result<(), String> {
+fn write_wav(path: &Path, data: &[f32]) -> Result<()> {
     let spec = hound::WavSpec {
         channels: 1,
         sample_rate: 44_100,
@@ -389,14 +391,14 @@ fn write_wav(path: &Path, data: &[f32]) -> Result<(), String> {
     };
 
     let mut writer = hound::WavWriter::create(path, spec)
-        .map_err(|err| format!("Failed to create WAV: {err}"))?;
+        .with_context(|| format!("Failed to create WAV: {}", path.display()))?;
     for &sample in data {
         writer
             .write_sample(sample)
-            .map_err(|err| format!("Failed to write WAV: {err}"))?;
+            .with_context(|| format!("Failed to write WAV sample to {}", path.display()))?;
     }
     writer
         .finalize()
-        .map_err(|err| format!("Failed to finalize WAV: {err}"))?;
+        .with_context(|| format!("Failed to finalize WAV: {}", path.display()))?;
     Ok(())
 }

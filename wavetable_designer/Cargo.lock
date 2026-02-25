@@ -3569,6 +3569,7 @@ dependencies = [
 name = "wavetable_designer"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "cpal",
  "hound",
  "nih_plug",

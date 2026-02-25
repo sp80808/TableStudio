@@ -1,0 +1,150 @@
+warning: `/Volumes/Harry/DEV/TableStudio/wavetable_designer/.cargo/config` is deprecated in favor of `config.toml`
+  |
+  = help: if you need to support cargo 1.38 or earlier, you can symlink `config` to `config.toml`
+warning: hard linking files in the incremental compilation cache failed. copying files instead. consider moving the cache directory to a file system which supports hard linking in session dir `/Volumes/Harry/DEV/TableStudio/wavetable_designer/target/debug/incremental/wavetable_designer-077ta0z98p67q/s-hg46c9k2go-1gpma4k-working`
+
+warning: unused import: `PreviewMode`
+ --> src/dsp.rs:1:35
+  |
+1 | ...e, PreviewMode, W...
+  |       ^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: `wavetable_designer` (lib) generated 2 warnings (run `cargo fix --lib -p wavetable_designer` to apply 1 suggestion)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.59s
+     Running `target/debug/wavetable_designer`
+01:51:57 [INFO] jack_sys: Loading jack from libjack.0.dylib.
+01:51:57 [INFO] nih_plug::wrapper::standalone::backend::cpal: Use the '--midi-input' option to select a MIDI input device.
+01:51:57 [INFO] nih_plug::wrapper::standalone: Using the CoreAudio backend
+01:51:57 [DEBUG] (1) egui_glow::painter: 
+opengl version: 4.1 Metal - 90.5
+opengl renderer: Apple M1 Pro
+opengl vendor: Apple
+01:51:57 [DEBUG] (1) egui_glow::shader_version: Shader version: Gl140 ("4.10").
+01:51:57 [DEBUG] (1) egui_glow::painter: Shader header: "#version 140\n".
+01:51:57 [TRACE] (1) egui_glow::painter: [/Users/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/egui_glow-0.31.1/src/painter.rs:174] OpenGL extensions: {"GL_APPLE_texture_range", "GL_ARB_internalformat_query", "GL_ARB_texture_buffer_object_rgb32", "GL_ARB_sample_shading", "GL_ARB_texture_swizzle", "GL_ARB_texture_cube_map_array", "GL_ARB_instanced_arrays", "GL_ARB_texture_query_lod", "GL_ARB_draw_indirect", "GL_ARB_tessellation_shader", "GL_EXT_debug_marker", "GL_ARB_blend_func_extended", "GL_ARB_shader_subroutine", "GL_ARB_draw_buffers_blend", "GL_APPLE_container_object_shareable", "GL_ARB_explicit_attrib_location", "GL_EXT_texture_compression_s3tc", "GL_ARB_shading_language_include", "GL_NV_texture_barrier", "GL_ARB_gpu_shader5", "GL_ARB_shader_bit_encoding", "GL_EXT_framebuffer_multisample_blit_scaled", "GL_EXT_texture_filter_anisotropic", "GL_APPLE_client_storage", "GL_ARB_texture_gather", "GL_ARB_ES2_compatibility", "GL_EXT_texture_sRGB_decode", "GL_ARB_transform_feedback3", "GL_ARB_occlusion_query2", "GL_EXT_debug_label", "GL_APPLE_flush_render", "GL_ARB_viewport_array", "GL_ARB_texture_rgb10_a2ui", "GL_ARB_texture_storage", "GL_APPLE_rgb_422", "GL_ARB_vertex_type_2_10_10_10_rev", "GL_APPLE_row_bytes", "GL_ARB_separate_shader_objects", "GL_ARB_timer_query", "GL_ARB_transform_feedback2", "GL_ARB_vertex_attrib_64bit", "GL_ARB_gpu_shader_fp64", "GL_ARB_sampler_objects"}
+01:51:57 [DEBUG] (1) egui_glow::painter: SRGB texture Support: true
+01:51:57 [DEBUG] (1) egui_glow::painter: SRGB framebuffer Support: false
+01:51:57 [DEBUG] (1) egui_glow::vao: GL version: "4.1 Metal - 90.5".
+01:51:57 [ERROR] nih_plug::wrapper::util: thread 'unnamed' panicked at 'Received 558 samples, while the configured buffer size is 512': /Users/user/.cargo/git/checkouts/nih-plug-d4210f82e920295f/28b149e/src/wrapper/standalone/backend/cpal.rs:832
+   0: backtrace::backtrace::libunwind::trace
+             at /Users/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/backtrace-0.3.76/src/backtrace/libunwind.rs:117:9
+      backtrace::backtrace::trace_unsynchronized::<<backtrace::capture::Backtrace>::create::{closure#0}>
+             at /Users/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/backtrace-0.3.76/src/backtrace/mod.rs:66:14
+   1: backtrace::backtrace::trace::<<backtrace::capture::Backtrace>::create::{closure#0}>
+             at /Users/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/backtrace-0.3.76/src/backtrace/mod.rs:53:14
+   2: <backtrace::capture::Backtrace>::create
+             at /Users/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/backtrace-0.3.76/src/capture.rs:294:9
+   3: <backtrace::capture::Backtrace>::new
+             at /Users/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/backtrace-0.3.76/src/capture.rs:259:22
+   4: nih_plug::wrapper::util::log_panics::{closure#0}::{closure#0}
+             at /Users/user/.cargo/git/checkouts/nih-plug-d4210f82e920295f/28b149e/src/wrapper/util.rs:148:29
+   5: assert_no_alloc::permit_alloc::<(), nih_plug::wrapper::util::log_panics::{closure#0}::{closure#0}>
+             at /Users/user/.cargo/git/checkouts/rust-assert-no-alloc-326423a65fd2fe4b/a6fb4f6/src/lib.rs:113:12
+   6: nih_plug::util::permit_alloc::<(), nih_plug::wrapper::util::log_panics::{closure#0}::{closure#0}>
+             at /Users/user/.cargo/git/checkouts/nih-plug-d4210f82e920295f/28b149e/src/util.rs:18:5
+   7: nih_plug::wrapper::util::log_panics::{closure#0}
+             at /Users/user/.cargo/git/checkouts/nih-plug-d4210f82e920295f/28b149e/src/wrapper/util.rs:145:9
+   8: <alloc::boxed::Box<dyn for<'a, 'b> core::ops::function::Fn<(&'a std::panic::PanicHookInfo<'b>,), Output = ()> + core::marker::Send + core::marker::Sync> as core::ops::function::Fn<(&std::panic::PanicHookInfo,)>>::call
+             at /rustc/a423f68a0d75656eabab4982a06bed9f316f7109/library/alloc/src/boxed.rs:2220:9
+      std::panicking::panic_with_hook
+             at /rustc/a423f68a0d75656eabab4982a06bed9f316f7109/library/std/src/panicking.rs:833:13
+   9: std::panicking::panic_handler::{closure#0}
+             at /rustc/a423f68a0d75656eabab4982a06bed9f316f7109/library/std/src/panicking.rs:698:13
+  10: std::sys::backtrace::__rust_end_short_backtrace::<std::panicking::panic_handler::{closure#0}, !>
+             at /rustc/a423f68a0d75656eabab4982a06bed9f316f7109/library/std/src/sys/backtrace.rs:182:18
+  11: __rustc::rust_begin_unwind
+             at /rustc/a423f68a0d75656eabab4982a06bed9f316f7109/library/std/src/panicking.rs:689:5
+  12: core::panicking::panic_fmt
+             at /rustc/a423f68a0d75656eabab4982a06bed9f316f7109/library/core/src/panicking.rs:80:14
+  13: <nih_plug::wrapper::standalone::backend::cpal::CpalMidir>::build_output_data_callback::<wavetable_designer::WavetableDesigner, f32, <nih_plug::wrapper::standalone::wrapper::Wrapper<wavetable_designer::WavetableDesigner, nih_plug::wrapper::standalone::backend::cpal::CpalMidir>>::run_audio_thread::{closure#0}>::{closure#0}
+             at /Users/user/.cargo/git/checkouts/nih-plug-d4210f82e920295f/28b149e/src/wrapper/standalone/backend/cpal.rs:832:17
+  14: <cpal::platform::platform_impl::Device as cpal::traits::DeviceTrait>::build_output_stream::<f32, <nih_plug::wrapper::standalone::backend::cpal::CpalMidir>::build_output_data_callback<wavetable_designer::WavetableDesigner, f32, <nih_plug::wrapper::standalone::wrapper::Wrapper<wavetable_designer::WavetableDesigner, nih_plug::wrapper::standalone::backend::cpal::CpalMidir>>::run_audio_thread::{closure#0}>::{closure#0}, <nih_plug::wrapper::standalone::backend::cpal::CpalMidir as nih_plug::wrapper::standalone::backend::Backend<wavetable_designer::WavetableDesigner>>::run<<nih_plug::wrapper::standalone::wrapper::Wrapper<wavetable_designer::WavetableDesigner, nih_plug::wrapper::standalone::backend::cpal::CpalMidir>>::run_audio_thread::{closure#0}>::{closure#0}::{closure#3}>::{closure#0}
+             at /Users/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/cpal-0.15.3/src/traits.rs:169:17
+  15: <cpal::host::coreaudio::macos::Device>::build_output_stream_raw::<<cpal::platform::platform_impl::Device as cpal::traits::DeviceTrait>::build_output_stream<f32, <nih_plug::wrapper::standalone::backend::cpal::CpalMidir>::build_output_data_callback<wavetable_designer::WavetableDesigner, f32, <nih_plug::wrapper::standalone::wrapper::Wrapper<wavetable_designer::WavetableDesigner, nih_plug::wrapper::standalone::backend::cpal::CpalMidir>>::run_audio_thread::{closure#0}>::{closure#0}, <nih_plug::wrapper::standalone::backend::cpal::CpalMidir as nih_plug::wrapper::standalone::backend::Backend<wavetable_designer::WavetableDesigner>>::run<<nih_plug::wrapper::standalone::wrapper::Wrapper<wavetable_designer::WavetableDesigner, nih_plug::wrapper::standalone::backend::cpal::CpalMidir>>::run_audio_thread::{closure#0}>::{closure#0}::{closure#3}>::{closure#0}, <nih_plug::wrapper::standalone::backend::cpal::CpalMidir as nih_plug::wrapper::standalone::backend::Backend<wavetable_designer::WavetableDesigner>>::run<<nih_plug::wrapper::standalone::wrapper::Wrapper<wavetable_designer::WavetableDesigner, nih_plug::wrapper::standalone::backend::cpal::CpalMidir>>::run_audio_thread::{closure#0}>::{closure#0}::{closure#3}>::{closure#0}
+             at /Users/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/cpal-0.15.3/src/host/coreaudio/macos/mod.rs:708:13
+  16: <coreaudio::audio_unit::AudioUnit>::set_render_callback::<<cpal::host::coreaudio::macos::Device>::build_output_stream_raw<<cpal::platform::platform_impl::Device as cpal::traits::DeviceTrait>::build_output_stream<f32, <nih_plug::wrapper::standalone::backend::cpal::CpalMidir>::build_output_data_callback<wavetable_designer::WavetableDesigner, f32, <nih_plug::wrapper::standalone::wrapper::Wrapper<wavetable_designer::WavetableDesigner, nih_plug::wrapper::standalone::backend::cpal::CpalMidir>>::run_audio_thread::{closure#0}>::{closure#0}, <nih_plug::wrapper::standalone::backend::cpal::CpalMidir as nih_plug::wrapper::standalone::backend::Backend<wavetable_designer::WavetableDesigner>>::run<<nih_plug::wrapper::standalone::wrapper::Wrapper<wavetable_designer::WavetableDesigner, nih_plug::wrapper::standalone::backend::cpal::CpalMidir>>::run_audio_thread::{closure#0}>::{closure#0}::{closure#3}>::{closure#0}, <nih_plug::wrapper::standalone::backend::cpal::CpalMidir as nih_plug::wrapper::standalone::backend::Backend<wavetable_designer::WavetableDesigner>>::run<<nih_plug::wrapper::standalone::wrapper::Wrapper<wavetable_designer::WavetableDesigner, nih_plug::wrapper::standalone::backend::cpal::CpalMidir>>::run_audio_thread::{closure#0}>::{closure#0}::{closure#3}>::{closure#0}, coreaudio::audio_unit::render_callback::data::Raw>::{closure#0}
+             at /Users/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/coreaudio-rs-0.11.3/src/audio_unit/render_callback.rs:502:19
+  17: coreaudio::audio_unit::render_callback::input_proc
+             at /Users/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/coreaudio-rs-0.11.3/src/audio_unit/render_callback.rs:768:9
+  18: _AUNotQuiteSoSimpleTimeFactory
+  19: <unknown>
+  20: <unknown>
+  21: <unknown>
+  22: <unknown>
+  23: <unknown>
+  24: <unknown>
+  25: <unknown>
+  26: <unknown>
+  27: <unknown>
+  28: <unknown>
+  29: <unknown>
+  30: <unknown>
+  31: _AUNotQuiteSoSimpleTimeFactory
+  32: _AUGenericOutputFactory
+  33: <unknown>
+  34: <unknown>
+  35: <unknown>
+  36: __pthread_cond_wait
+
+01:51:57 [ERROR] nih_plug::wrapper::util: thread 'unnamed' panicked at 'panic in a function that cannot unwind': /rustc/a423f68a0d75656eabab4982a06bed9f316f7109/library/core/src/panicking.rs:225
+   0: backtrace::backtrace::libunwind::trace
+             at /Users/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/backtrace-0.3.76/src/backtrace/libunwind.rs:117:9
+      backtrace::backtrace::trace_unsynchronized::<<backtrace::capture::Backtrace>::create::{closure#0}>
+             at /Users/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/backtrace-0.3.76/src/backtrace/mod.rs:66:14
+   1: backtrace::backtrace::trace::<<backtrace::capture::Backtrace>::create::{closure#0}>
+             at /Users/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/backtrace-0.3.76/src/backtrace/mod.rs:53:14
+   2: <backtrace::capture::Backtrace>::create
+             at /Users/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/backtrace-0.3.76/src/capture.rs:294:9
+   3: <backtrace::capture::Backtrace>::new
+             at /Users/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/backtrace-0.3.76/src/capture.rs:259:22
+   4: nih_plug::wrapper::util::log_panics::{closure#0}::{closure#0}
+             at /Users/user/.cargo/git/checkouts/nih-plug-d4210f82e920295f/28b149e/src/wrapper/util.rs:148:29
+   5: assert_no_alloc::permit_alloc::<(), nih_plug::wrapper::util::log_panics::{closure#0}::{closure#0}>
+             at /Users/user/.cargo/git/checkouts/rust-assert-no-alloc-326423a65fd2fe4b/a6fb4f6/src/lib.rs:113:12
+   6: nih_plug::util::permit_alloc::<(), nih_plug::wrapper::util::log_panics::{closure#0}::{closure#0}>
+             at /Users/user/.cargo/git/checkouts/nih-plug-d4210f82e920295f/28b149e/src/util.rs:18:5
+   7: nih_plug::wrapper::util::log_panics::{closure#0}
+             at /Users/user/.cargo/git/checkouts/nih-plug-d4210f82e920295f/28b149e/src/wrapper/util.rs:145:9
+   8: <alloc::boxed::Box<dyn for<'a, 'b> core::ops::function::Fn<(&'a std::panic::PanicHookInfo<'b>,), Output = ()> + core::marker::Send + core::marker::Sync> as core::ops::function::Fn<(&std::panic::PanicHookInfo,)>>::call
+             at /rustc/a423f68a0d75656eabab4982a06bed9f316f7109/library/alloc/src/boxed.rs:2220:9
+      std::panicking::panic_with_hook
+             at /rustc/a423f68a0d75656eabab4982a06bed9f316f7109/library/std/src/panicking.rs:833:13
+   9: std::panicking::panic_handler::{closure#0}
+             at /rustc/a423f68a0d75656eabab4982a06bed9f316f7109/library/std/src/panicking.rs:691:13
+  10: std::sys::backtrace::__rust_end_short_backtrace::<std::panicking::panic_handler::{closure#0}, !>
+             at /rustc/a423f68a0d75656eabab4982a06bed9f316f7109/library/std/src/sys/backtrace.rs:182:18
+  11: __rustc::rust_begin_unwind
+             at /rustc/a423f68a0d75656eabab4982a06bed9f316f7109/library/std/src/panicking.rs:689:5
+  12: core::panicking::panic_nounwind_fmt::runtime
+             at /rustc/a423f68a0d75656eabab4982a06bed9f316f7109/library/core/src/panicking.rs:122:22
+      core::panicking::panic_nounwind_fmt
+             at /rustc/a423f68a0d75656eabab4982a06bed9f316f7109/library/core/src/intrinsics/mod.rs:2434:9
+  13: core::panicking::panic_nounwind
+             at /rustc/a423f68a0d75656eabab4982a06bed9f316f7109/library/core/src/panicking.rs:225:5
+  14: core::panicking::panic_cannot_unwind
+             at /rustc/a423f68a0d75656eabab4982a06bed9f316f7109/library/core/src/panicking.rs:337:5
+  15: coreaudio::audio_unit::render_callback::input_proc
+             at /Users/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/coreaudio-rs-0.11.3/src/audio_unit/render_callback.rs:758:1
+  16: _AUNotQuiteSoSimpleTimeFactory
+  17: <unknown>
+  18: <unknown>
+  19: <unknown>
+  20: <unknown>
+  21: <unknown>
+  22: <unknown>
+  23: <unknown>
+  24: <unknown>
+  25: <unknown>
+  26: <unknown>
+  27: <unknown>
+  28: <unknown>
+  29: _AUNotQuiteSoSimpleTimeFactory
+  30: _AUGenericOutputFactory
+  31: <unknown>
+  32: <unknown>
+  33: <unknown>
+  34: __pthread_cond_wait
+
+thread caused non-unwinding panic. aborting.

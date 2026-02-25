@@ -6,6 +6,8 @@ pub const WT_SIZE: usize = 2048;
 pub const DEFAULT_GRID_ROWS: usize = 8;
 /// Default number of columns in the frame selection grid.
 pub const DEFAULT_GRID_COLS: usize = 8;
+/// Number of FM operators available in the multi-operator engine.
+pub const FM_OPS: usize = 6;
 
 /// Controls which audio preview mode the plugin uses.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -29,6 +31,80 @@ pub enum MorphMode {
     Spectral,
     /// Spectral interpolation with all phase angles forced to 0.0 (Laser/Harsh effect).
     SpectralZeroPhase,
+}
+
+/// Operator waveform sources for the FM engine.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum FmWave {
+    Sine,
+    Saw,
+    Square,
+    Wavetable,
+}
+
+/// Modulation mode for each operator (phase or frequency).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum FmModMode {
+    Phase,
+    Frequency,
+}
+
+/// Per-operator configuration used by the multi-operator FM engine.
+#[derive(Debug, Clone, Copy)]
+pub struct FmOperator {
+    pub enabled: bool,
+    pub wave: FmWave,
+    pub ratio: f32,
+    pub detune_cents: f32,
+    pub level: f32,
+    pub mod_index: f32,
+    pub feedback: f32,
+    pub mod_mode: FmModMode,
+    pub lfo_rate: f32,
+    pub lfo_ratio_depth: f32,
+    pub lfo_index_depth: f32,
+    pub lfo_feedback_depth: f32,
+}
+
+impl Default for FmOperator {
+    fn default() -> Self {
+        Self {
+            enabled: false,
+            wave: FmWave::Sine,
+            ratio: 1.0,
+            detune_cents: 0.0,
+            level: 1.0,
+            mod_index: 0.0,
+            feedback: 0.0,
+            mod_mode: FmModMode::Phase,
+            lfo_rate: 0.0,
+            lfo_ratio_depth: 0.0,
+            lfo_index_depth: 0.0,
+            lfo_feedback_depth: 0.0,
+        }
+    }
+}
+
+/// Connection graph for the FM engine (modulators → carriers + output mask).
+#[derive(Debug, Clone, Copy)]
+pub struct FmAlgorithm {
+    pub mod_matrix: [[bool; FM_OPS]; FM_OPS],
+    pub output_mask: [bool; FM_OPS],
+    pub feedback_op: Option<usize>,
+}
+
+impl FmAlgorithm {
+    pub fn simple_stack() -> Self {
+        let mut mod_matrix = [[false; FM_OPS]; FM_OPS];
+        mod_matrix[0][1] = true;
+        let mut output_mask = [false; FM_OPS];
+        output_mask[1] = true;
+        Self {
+            mod_matrix,
+            output_mask,
+            feedback_op: None,
+        }
+    }
 }
 
 impl PreviewMode {
@@ -95,6 +171,12 @@ pub struct WtState {
     pub fm_amount: f32,
     /// Modulator waveform shape: 0 = Sine, 1 = Saw, 2 = Square.
     pub mod_shape: usize,
+    /// If true, derive the multi-op FM engine from the legacy controls.
+    pub fm_use_legacy_controls: bool,
+    /// Current FM algorithm graph (used when legacy controls are disabled).
+    pub fm_algorithm: FmAlgorithm,
+    /// Per-operator FM configuration (used when legacy controls are disabled).
+    pub fm_ops: [FmOperator; FM_OPS],
 
     // Spectral Morph
     pub spectral_morph_amount: f32,
@@ -151,14 +233,37 @@ impl Default for WtState {
         }
         frames[0].is_keyframe = true;
 
+        let fm_ratio = 2.0;
+        let fm_amount = 0.0;
+        let mod_shape = 0;
+        let mut fm_ops = [FmOperator::default(); FM_OPS];
+        fm_ops[0] = FmOperator {
+            enabled: true,
+            wave: FmWave::Sine,
+            ratio: fm_ratio,
+            mod_index: fm_amount,
+            level: 1.0,
+            ..Default::default()
+        };
+        fm_ops[1] = FmOperator {
+            enabled: true,
+            wave: FmWave::Wavetable,
+            ratio: 1.0,
+            level: 1.0,
+            ..Default::default()
+        };
+
         Self {
             frames,
             active_frame: 0,
             grid_rows: DEFAULT_GRID_ROWS,
             grid_cols: DEFAULT_GRID_COLS,
-            fm_ratio: 2.0,
-            fm_amount: 0.0,
-            mod_shape: 0,
+            fm_ratio,
+            fm_amount,
+            mod_shape,
+            fm_use_legacy_controls: true,
+            fm_algorithm: FmAlgorithm::simple_stack(),
+            fm_ops,
             spectral_morph_amount: 0.35,
             spectral_formant: 0.0,
             spectral_smear: 0.0,
