@@ -21,12 +21,7 @@ pub fn bake_wavetable(state: &mut WtState) {
 }
 
 fn bake_frame(raw: &[f32], state: &WtState) -> Vec<f32> {
-    let mut baked = raw.to_vec();
-
-    // 1. FM Stacking (2-op)
-    if state.fm_amount > 0.001 {
-        baked = apply_fm_stack(raw, state.fm_ratio, state.fm_amount, state.mod_shape);
-    }
+    let mut baked = render_fm_stage(raw, state);
 
     // 2. Fundamental Boost (BassForge)
     if state.fundamental_boost > 0.001 {
@@ -55,44 +50,50 @@ fn bake_frame(raw: &[f32], state: &WtState) -> Vec<f32> {
     baked
 }
 
+/// Returns the FM stage output for preview and baking.
+pub fn render_fm_stage(raw: &[f32], state: &WtState) -> Vec<f32> {
+    if raw.is_empty() {
+        return Vec::new();
+    }
 
+    if state.fm_use_legacy_controls {
+        if state.fm_amount <= 0.001 {
+            return raw.to_vec();
+        }
+        let ops = build_legacy_ops(state);
+        let alg = FmAlgorithm::simple_stack();
+        return render_fm_graph(raw, &ops, &alg);
+    }
+
+    render_fm_graph(raw, &state.fm_ops, &state.fm_algorithm)
+}
 
 pub fn apply_fm_stack(raw: &[f32], ratio: f32, amount: f32, mod_shape: usize) -> Vec<f32> {
-    let len = raw.len();
-    if len == 0 {
+    if raw.is_empty() {
         return Vec::new();
     }
     if amount <= 0.001 {
         return raw.to_vec();
     }
 
-    let mut fm_table = vec![0.0; len];
-    for i in 0..len {
-        // Modulator phase
-        let mod_phase = (i as f32 / len as f32 * ratio * TAU) % TAU;
-        let mod_out = match mod_shape {
-            0 => mod_phase.sin(),
-            1 => std::f32::consts::FRAC_1_PI * (mod_phase - std::f32::consts::PI), // saw
-            2 => {
-                if mod_phase < std::f32::consts::PI {
-                    1.0
-                } else {
-                    -1.0
-                }
-            }
-            _ => 0.0,
-        };
-
-        // Carrier phase (modulated)
-        let base_phase = i as f32 / len as f32;
-        let carrier_phase = (base_phase + (mod_out * amount / TAU)).fract();
-        let mut c_idx = (carrier_phase * len as f32) as usize;
-        if c_idx >= len {
-            c_idx = len - 1;
-        }
-        fm_table[i] = raw[c_idx];
-    }
-    fm_table
+    let mut ops = [FmOperator::default(); FM_OPS];
+    ops[0] = FmOperator {
+        enabled: true,
+        wave: legacy_mod_wave(mod_shape),
+        ratio,
+        mod_index: amount,
+        level: 1.0,
+        ..Default::default()
+    };
+    ops[1] = FmOperator {
+        enabled: true,
+        wave: FmWave::Wavetable,
+        ratio: 1.0,
+        level: 1.0,
+        ..Default::default()
+    };
+    let alg = FmAlgorithm::simple_stack();
+    render_fm_graph(raw, &ops, &alg)
 }
 
 pub fn compute_harmonics(samples: &[f32]) -> Vec<f32> {
