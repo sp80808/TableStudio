@@ -1,15 +1,17 @@
 use std::sync::Arc;
+
 use nih_plug::prelude::*;
-use nih_plug_egui::{create_egui_editor, EguiState, resizable_window::ResizableWindow};
+use nih_plug_egui::{create_egui_editor, EguiState};
 use parking_lot::Mutex;
 
 mod app_state;
 mod dsp;
 mod editor;
+mod widgets;
+pub mod widgets;
 
-use app_state::WtState;
-use egui_plot::{Line, Plot, PlotPoints};
-use nih_plug_egui::egui::{self, Vec2, Color32, Stroke};
+use app_state::{PreviewMode, WtState};
+use dsp::note_to_freq;
 
 #[derive(Params)]
 pub struct WtParams {
@@ -23,7 +25,13 @@ pub struct WtParams {
 pub struct WavetableDesigner {
     params: Arc<WtParams>,
     state: Arc<Mutex<WtState>>,
-    phase: f32, // audio thread phase
+    phase: f32,
+    sample_rate: f32,
+
+    midi_note_id: u8,
+    midi_note_freq: f32,
+    midi_note_gain: Smoother<f32>,
+    edit_gate_gain: Smoother<f32>,
 }
 
 impl Default for WavetableDesigner {
@@ -32,6 +40,11 @@ impl Default for WavetableDesigner {
             params: Arc::new(WtParams::default()),
             state: Arc::new(Mutex::new(WtState::default())),
             phase: 0.0,
+            sample_rate: 44_100.0,
+            midi_note_id: 0,
+            midi_note_freq: 1.0,
+            midi_note_gain: Smoother::new(SmoothingStyle::Linear(5.0)),
+            edit_gate_gain: Smoother::new(SmoothingStyle::Linear(5.0)),
         }
     }
 }
@@ -39,9 +52,13 @@ impl Default for WavetableDesigner {
 impl Default for WtParams {
     fn default() -> Self {
         Self {
-            editor_state: EguiState::from_size(900, 650),
-            preview_gain: FloatParam::new("Preview Gain", -12.0, FloatRange::Linear { min: -60.0, max: 0.0 })
-                .with_unit("dB"),
+            editor_state: EguiState::from_size(980, 700),
+            preview_gain: FloatParam::new(
+                "Preview Gain",
+                -12.0,
+                FloatRange::Linear { min: -60.0, max: 0.0 },
+            )
+            .with_unit("dB"),
         }
     }
 }
@@ -61,51 +78,117 @@ impl Plugin for WavetableDesigner {
         names: PortNames::const_default(),
     }];
 
+    const MIDI_INPUT: MidiConfig = MidiConfig::Basic;
+
     type SysExMessage = ();
     type BackgroundTask = ();
 
-    fn params(&self) -> Arc<dyn Params> { self.params.clone() }
-    
+    fn params(&self) -> Arc<dyn Params> {
+        self.params.clone()
+    }
+
+    fn initialize(
+        &mut self,
+        _audio_io_layout: &AudioIOLayout,
+        buffer_config: &BufferConfig,
+        _context: &mut impl InitContext<Self>,
+    ) -> bool {
+        self.sample_rate = buffer_config.sample_rate;
+        true
+    }
+
+    fn reset(&mut self) {
+        self.phase = 0.0;
+        self.midi_note_id = 0;
+        self.midi_note_freq = 1.0;
+        self.midi_note_gain.reset(0.0);
+        self.edit_gate_gain.reset(0.0);
+    }
+
     fn process(
         &mut self,
         buffer: &mut Buffer,
         _aux: &mut AuxiliaryBuffers,
         context: &mut impl ProcessContext<Self>,
     ) -> ProcessStatus {
-        let sample_rate = context.transport().sample_rate;
-        
-        // Grab values from atomic fast-path if possible, or lock
+        let mut next_event = context.next_event();
+
         let mut table_cache = [0.0; app_state::WT_SIZE];
-        let mut playing = false;
-        let mut freq = 55.0; // A1
-        
-        if let Some(guard) = self.state.try_lock() {
-            table_cache.copy_from_slice(&guard.baked_table);
-            playing = guard.preview_playing;
-            freq = guard.preview_freq;
-        }
-
-        let gain = nih_plug::util::db_to_gain(self.params.preview_gain.smoothed.next());
-        let phase_inc = freq / sample_rate;
-
-        for channel_frames in buffer.iter_samples() {
-            let mut sample = 0.0;
-            if playing {
-                let idx_f = self.phase * app_state::WT_SIZE as f32;
-                let idx0 = idx_f as usize % app_state::WT_SIZE;
-                let idx1 = (idx0 + 1) % app_state::WT_SIZE;
-                let frac = idx_f.fract();
-                
-                sample = table_cache[idx0] * (1.0 - frac) + table_cache[idx1] * frac;
-                
-                self.phase += phase_inc;
-                if self.phase >= 1.0 { self.phase -= 1.0; }
+        let (preview_mode, preview_note, preview_detune, edit_gate) = {
+            if let Some(guard) = self.state.try_lock() {
+                table_cache.copy_from_slice(&guard.active_frame().baked);
+                (
+                    guard.preview_mode,
+                    guard.preview_note,
+                    guard.preview_detune_cents,
+                    guard.edit_gate,
+                )
             } else {
-                self.phase = 0.0;
+                // If the editor is holding the lock, we can't access the state.
+                // In this case, we'll just output silence.
+                (PreviewMode::Off, 0, 0.0, false)
+            }
+        };
+
+        let gain = util::db_to_gain(self.params.preview_gain.smoothed.next());
+
+        for (sample_id, channel_samples) in buffer.iter_samples().enumerate() {
+            // MIDI handling for monophonic mode
+            while let Some(event) = next_event {
+                if event.timing() > sample_id as u32 {
+                    break;
+                }
+
+                match event {
+                    NoteEvent::NoteOn { note, velocity, .. } => {
+                        if velocity > 0.0 {
+                            self.midi_note_id = note;
+                            self.midi_note_freq = util::midi_note_to_freq(note);
+                            self.midi_note_gain.set_target(self.sample_rate, velocity);
+                        } else if note == self.midi_note_id {
+                            self.midi_note_gain.set_target(self.sample_rate, 0.0);
+                        }
+                    }
+                    NoteEvent::NoteOff { note, .. } if note == self.midi_note_id => {
+                        self.midi_note_gain.set_target(self.sample_rate, 0.0);
+                    }
+                    NoteEvent::PolyPressure { note, pressure, .. } if note == self.midi_note_id => {
+                        self.midi_note_gain.set_target(self.sample_rate, pressure);
+                    }
+                    _ => {}
+                }
+
+                next_event = context.next_event();
             }
 
-            for frame in channel_frames {
-                *frame = sample * gain;
+            let sample = match preview_mode {
+                PreviewMode::Off => {
+                    self.phase = 0.0;
+                    0.0
+                }
+                PreviewMode::EditDrone => {
+                    let target = if edit_gate { 1.0 } else { 0.0 };
+                    self.edit_gate_gain.set_target(self.sample_rate, target);
+                    let freq = note_to_freq(preview_note, preview_detune);
+                    sample_from_table(
+                        &mut self.phase,
+                        freq,
+                        self.sample_rate,
+                        &table_cache,
+                    ) * self.edit_gate_gain.next()
+                }
+                PreviewMode::Midi => {
+                    sample_from_table(
+                        &mut self.phase,
+                        self.midi_note_freq,
+                        self.sample_rate,
+                        &table_cache,
+                    ) * self.midi_note_gain.next()
+                }
+            } * gain;
+
+            for frame in channel_samples {
+                *frame = sample;
             }
         }
 
@@ -128,6 +211,22 @@ impl Plugin for WavetableDesigner {
     }
 }
 
+fn sample_from_table(phase: &mut f32, freq: f32, sample_rate: f32, table: &[f32]) -> f32 {
+    let phase_inc = freq / sample_rate;
+    let idx_f = *phase * app_state::WT_SIZE as f32;
+    let idx0 = idx_f as usize % app_state::WT_SIZE;
+    let idx1 = (idx0 + 1) % app_state::WT_SIZE;
+    let frac = idx_f.fract();
+    let sample = table[idx0] * (1.0 - frac) + table[idx1] * frac;
+
+    *phase += phase_inc;
+    if *phase >= 1.0 {
+        *phase -= 1.0;
+    }
+
+    sample
+}
+
 impl ClapPlugin for WavetableDesigner {
     const CLAP_ID: &'static str = "ai.tablestudio.wavetable_designer";
     const CLAP_DESCRIPTION: Option<&'static str> = Some("Advanced Wavetable Editor");
@@ -138,7 +237,8 @@ impl ClapPlugin for WavetableDesigner {
 
 impl Vst3Plugin for WavetableDesigner {
     const VST3_CLASS_ID: [u8; 16] = *b"TableStudioWT!!!";
-    const VST3_SUBCATEGORIES: &'static [Vst3SubCategory] = &[Vst3SubCategory::Instrument, Vst3SubCategory::Synth];
+    const VST3_SUBCATEGORIES: &'static [Vst3SubCategory] =
+        &[Vst3SubCategory::Instrument, Vst3SubCategory::Synth];
 }
 
 nih_export_clap!(WavetableDesigner);

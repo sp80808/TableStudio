@@ -3,7 +3,7 @@ name = "wavetable_designer"
 version = "0.1.0"
 edition = "2021"
 authors = ["Antigravity Master Agent <antigravity@tablestudio.ai>"]
-license = "GPL-3.0-or-later"
+license = "MIT"
 homepage = "https://tablestudio.ai"
 description = "TableStudio Wavetable Designer"
 
@@ -27,7 +27,6 @@ rustfft = "6"
 num-complex = "0.4"
 cpal = "0.15"
 tempfile = "3"
-egui_plot = "0.27" # Using 0.27 to align with typical nih-plug egui bounds, will adapt if needed.
 
 [profile.release]
 lto = "thin"

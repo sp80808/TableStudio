@@ -1,0 +1,100 @@
+warning: `/Volumes/Harry/DEV/TableStudio/wavetable_designer/.cargo/config` is deprecated in favor of `config.toml`
+  |
+  = help: if you need to support cargo 1.38 or earlier, you can symlink `config` to `config.toml`
+    Checking wavetable_designer v0.1.0 (/Volumes/Harry/DEV/TableStudio/wavetable_designer)
+warning: hard linking files in the incremental compilation cache failed. copying files instead. consider moving the cache directory to a file system which supports hard linking in session dir `/Volumes/Harry/DEV/TableStudio/wavetable_designer/target/debug/incremental/wavetable_designer-3ck3mez3btba9/s-hg45ecugb2-0iy4ny3-working`
+
+error[E0761]: file for module `editor` found at both "src/editor.rs" and "src/editor/mod.rs"
+ --> src/lib.rs:8:1
+  |
+8 | mod editor;
+  | ^^^^^^^^^^^
+  |
+  = help: delete or rename one of them to remove the ambiguity
+
+warning: unused import: `resizable_window::ResizableWindow`
+ --> src/lib.rs:3:52
+  |
+3 | ...e, resizable_window::ResizableWindow};
+  |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `PreviewMode`
+ --> src/dsp.rs:1:24
+  |
+1 | ...::{PreviewMode, W...
+  |       ^^^^^^^^^^^
+
+warning: unused import: `Widget`
+ --> src/widgets.rs:1:77
+  |
+1 | ...c2, Widget};
+  |        ^^^^^^
+
+warning: unused import: `std::f32::consts::TAU`
+ --> src/widgets.rs:2:5
+  |
+2 | use std::f32::consts::TAU;
+  |     ^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `Line`, `PlotPoints`, and `Plot`
+  --> src/lib.rs:12:17
+   |
+12 | ...::{Line, Plot, PlotPoints};
+   |       ^^^^  ^^^^  ^^^^^^^^^^
+
+warning: unused imports: `Color32`, `Stroke`, `Vec2`, and `self`
+  --> src/lib.rs:13:27
+   |
+13 | ...::{self, Vec2, Color32, Stroke};
+   |       ^^^^  ^^^^  ^^^^^^^  ^^^^^^
+
+error[E0609]: no field `baked_table` on type `MutexGuard<'_, ..., ...>`
+  --> src/lib.rs:84:48
+   |
+84 | ...rd.baked_table);
+   |       ^^^^^^^^^^^ unknown field
+   |
+   = note: available fields are: `frames`, `active_frame`, `grid_rows`, `grid_cols`, `fm_ratio` ... and 8 others
+   = note: the full name for the type has been written to '/Volumes/Harry/DEV/TableStudio/wavetable_designer/target/debug/deps/wavetable_designer-5acff4b0b3b1b225.long-type-13231429162864033008.txt'
+   = note: consider using `--verbose` to print the full type name to the console
+
+error[E0609]: no field `preview_playing` on type `MutexGuard<'_, ..., ...>`
+  --> src/lib.rs:85:29
+   |
+85 | ...rd.preview_playing;
+   |       ^^^^^^^^^^^^^^^ unknown field
+   |
+   = note: available fields are: `frames`, `active_frame`, `grid_rows`, `grid_cols`, `fm_ratio` ... and 8 others
+   = note: the full name for the type has been written to '/Volumes/Harry/DEV/TableStudio/wavetable_designer/target/debug/deps/wavetable_designer-5acff4b0b3b1b225.long-type-13231429162864033008.txt'
+   = note: consider using `--verbose` to print the full type name to the console
+
+error[E0609]: no field `preview_freq` on type `MutexGuard<'_, ..., ...>`
+  --> src/lib.rs:86:26
+   |
+86 | ...rd.preview_freq;
+   |       ^^^^^^^^^^^^ unknown field
+   |
+   = note: the full name for the type has been written to '/Volumes/Harry/DEV/TableStudio/wavetable_designer/target/debug/deps/wavetable_designer-5acff4b0b3b1b225.long-type-13231429162864033008.txt'
+   = note: consider using `--verbose` to print the full type name to the console
+help: a field with a similar name exists
+   |
+86 -             freq = guard.preview_freq;
+86 +             freq = guard.preview_mode;
+   |
+
+error[E0502]: cannot borrow `*state` as immutable because it is also borrowed as mutable
+ --> src/dsp.rs:8:37
+  |
+7 |     let frame = state.active_frame_mut();
+  |                 ----- mutable borrow occurs here
+8 |     frame.baked = bake_frame(frame, state);
+  |     -----------                     ^^^^^ immutable borrow occurs here
+  |     |
+  |     mutable borrow later used here
+
+Some errors have detailed explanations: E0502, E0609, E0761.
+For more information about an error, try `rustc --explain E0502`.
+warning: `wavetable_designer` (lib) generated 7 warnings
+error: could not compile `wavetable_designer` (lib) due to 5 previous errors; 7 warnings emitted

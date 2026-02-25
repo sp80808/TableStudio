@@ -1,0 +1,19 @@
+set shell := ["zsh", "-lc"]
+
+default:
+    @just --list
+
+dev:
+    cargo run -p wavetable_designer
+
+bundle:
+    cargo xtask bundle wavetable_designer --release
+
+fmt:
+    cargo fmt
+
+clippy:
+    cargo clippy --all-targets
+
+test:
+    cargo test
