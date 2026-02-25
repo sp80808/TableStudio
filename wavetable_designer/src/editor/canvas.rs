@@ -1,5 +1,5 @@
 use crate::app_state::{WtState, WT_SIZE};
-use crate::dsp::compute_harmonics;
+use crate::dsp::{apply_fm_stack, compute_harmonics, spectral_morph_preview};
 use nih_plug_egui::egui::{self, Color32, Pos2, Rect, Sense, Stroke, Vec2};
 
 const Y_SCALE: f32 = 0.45;
@@ -28,14 +28,12 @@ pub fn draw_canvas(ui: &mut egui::Ui, _ctx: &egui::Context, state: &mut WtState)
     {
         let frame = state.active_frame();
 
-        let mut baked_points = Vec::with_capacity(WT_SIZE);
-        for (i, &sample) in frame.baked.iter().enumerate() {
-            baked_points.push(sample_to_pos(rect, i, sample));
-        }
-        painter.add(egui::Shape::line(
-            baked_points,
-            Stroke::new(3.0, Color32::from_rgb(255, 140, 0)),
-        ));
+        let fm_preview = apply_fm_stack(&frame.raw, state.fm_ratio, state.fm_amount, state.mod_shape);
+        let spectral_preview = spectral_morph_preview(
+            &frame.raw,
+            &fm_preview,
+            state.spectral_morph_amount,
+        );
 
         let mut raw_points = Vec::with_capacity(WT_SIZE);
         for (i, &sample) in frame.raw.iter().enumerate() {
@@ -43,7 +41,25 @@ pub fn draw_canvas(ui: &mut egui::Ui, _ctx: &egui::Context, state: &mut WtState)
         }
         painter.add(egui::Shape::line(
             raw_points,
-            Stroke::new(1.5, Color32::from_rgb(50, 150, 255)),
+            Stroke::new(1.4, Color32::from_rgb(50, 150, 255)),
+        ));
+
+        let mut fm_points = Vec::with_capacity(WT_SIZE);
+        for (i, &sample) in fm_preview.iter().enumerate() {
+            fm_points.push(sample_to_pos(rect, i, sample));
+        }
+        painter.add(egui::Shape::line(
+            fm_points,
+            Stroke::new(2.4, Color32::from_rgb(255, 140, 0)),
+        ));
+
+        let mut spectral_points = Vec::with_capacity(WT_SIZE);
+        for (i, &sample) in spectral_preview.iter().enumerate() {
+            spectral_points.push(sample_to_pos(rect, i, sample));
+        }
+        painter.add(egui::Shape::line(
+            spectral_points,
+            Stroke::new(2.0, Color32::from_rgb(170, 80, 255)),
         ));
     }
 

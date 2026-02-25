@@ -8,7 +8,6 @@ mod app_state;
 mod dsp;
 mod editor;
 mod widgets;
-pub mod widgets;
 
 use app_state::{PreviewMode, WtState};
 use dsp::note_to_freq;
@@ -131,6 +130,10 @@ impl Plugin for WavetableDesigner {
         };
 
         let gain = util::db_to_gain(self.params.preview_gain.smoothed.next());
+        if preview_mode == PreviewMode::EditDrone {
+            let target = if edit_gate { 1.0 } else { 0.0 };
+            self.edit_gate_gain.set_target(self.sample_rate, target);
+        }
 
         for (sample_id, channel_samples) in buffer.iter_samples().enumerate() {
             // MIDI handling for monophonic mode
@@ -167,8 +170,6 @@ impl Plugin for WavetableDesigner {
                     0.0
                 }
                 PreviewMode::EditDrone => {
-                    let target = if edit_gate { 1.0 } else { 0.0 };
-                    self.edit_gate_gain.set_target(self.sample_rate, target);
                     let freq = note_to_freq(preview_note, preview_detune);
                     sample_from_table(
                         &mut self.phase,

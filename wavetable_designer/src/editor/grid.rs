@@ -3,9 +3,10 @@ use nih_plug_egui::egui::{self, Color32, Stroke, Vec2};
 
 const PREVIEW_HEIGHT: f32 = 36.0;
 
-pub fn draw_frame_grid(ui: &mut egui::Ui, state: &mut WtState) {
+pub fn draw_frame_grid(ui: &mut egui::Ui, state: &mut WtState) -> bool {
     let rows = state.grid_rows.max(1);
     let cols = state.grid_cols.max(1);
+    let mut changed = false;
 
     egui::ScrollArea::vertical().show(ui, |ui| {
         for row in 0..rows {
@@ -19,11 +20,14 @@ pub fn draw_frame_grid(ui: &mut egui::Ui, state: &mut WtState) {
                     let response = draw_frame_preview(ui, &state.frames[index], is_active);
                     if response.clicked() {
                         state.active_frame = index;
+                        changed = true;
                     }
                 }
             });
         }
     });
+
+    changed
 }
 
 fn draw_frame_preview(
@@ -41,6 +45,12 @@ fn draw_frame_preview(
         Color32::from_gray(24)
     };
     painter.rect_filled(rect, 3.0, bg);
+    let border_color = if frame.is_keyframe {
+        Color32::from_rgb(255, 180, 40)
+    } else {
+        Color32::from_gray(50)
+    };
+    painter.rect_stroke(rect, 3.0, Stroke::new(1.0, border_color));
 
     let mut points = Vec::with_capacity(WT_SIZE);
     for (i, &sample) in frame.baked.iter().enumerate() {

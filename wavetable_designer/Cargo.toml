@@ -27,6 +27,7 @@ rustfft = "6"
 num-complex = "0.4"
 cpal = "0.15"
 tempfile = "3"
+rand = "0.10.0"
 
 [profile.release]
 lto = "thin"

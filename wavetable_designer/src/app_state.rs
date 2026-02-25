@@ -53,6 +53,13 @@ pub struct WtState {
     pub fm_amount: f32,
     pub mod_shape: usize, // 0 = Sine, 1 = Saw, 2 = Square
 
+    // Spectral Morph
+    pub spectral_morph_amount: f32,
+    pub spectral_formant: f32,
+    pub spectral_smear: f32,
+    pub spectral_stretch: f32,
+    pub spectral_warp: f32,
+
     // BassForge / Effects
     pub fundamental_boost: f32,
     pub wavefold_amount: f32,
@@ -94,6 +101,11 @@ impl Default for WtState {
             fm_ratio: 2.0,
             fm_amount: 0.0,
             mod_shape: 0,
+            spectral_morph_amount: 0.35,
+            spectral_formant: 0.0,
+            spectral_smear: 0.0,
+            spectral_stretch: 0.0,
+            spectral_warp: 0.0,
             fundamental_boost: 0.0,
             wavefold_amount: 0.0,
             preview_mode: PreviewMode::Off,
