@@ -1,8 +1,18 @@
+//! Scrollable frame-selection grid panel.
+//!
+//! Renders a miniature waveform thumbnail for every frame in the wavetable.
+//! Clicking a thumbnail sets it as the active frame for editing.
+
 use crate::app_state::{WtState, WT_SIZE};
 use nih_plug_egui::egui::{self, Color32, Stroke, Vec2};
 
 const PREVIEW_HEIGHT: f32 = 36.0;
 
+/// Draws the full frame-selection grid inside a vertical scroll area.
+///
+/// Each cell is an 80×36 px thumbnail showing the frame's baked waveform.
+/// The active frame is highlighted with a blue background.  Clicking any cell
+/// updates `state.active_frame`.
 pub fn draw_frame_grid(ui: &mut egui::Ui, state: &mut WtState) {
     let rows = state.grid_rows.max(1);
     let cols = state.grid_cols.max(1);

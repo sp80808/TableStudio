@@ -7,12 +7,16 @@ use parking_lot::Mutex;
 mod app_state;
 mod dsp;
 mod editor;
-mod widgets;
 pub mod widgets;
 
 use app_state::{PreviewMode, WtState};
 use dsp::note_to_freq;
 
+/// NIH-plug parameter set for the Wavetable Designer plugin.
+///
+/// Persists `editor_state` (window size/position) and exposes a single
+/// `preview_gain` float parameter controlling the output level of all preview
+/// modes.
 #[derive(Params)]
 pub struct WtParams {
     #[persist = "editor-state"]
@@ -22,6 +26,11 @@ pub struct WtParams {
     pub preview_gain: FloatParam,
 }
 
+/// Top-level plugin struct.
+///
+/// Owns the shared [`WtState`] (wrapped in an `Arc<Mutex>` so the egui editor
+/// and the audio thread can both access it) plus per-audio-thread state for the
+/// phase accumulator and MIDI voice tracking.
 pub struct WavetableDesigner {
     params: Arc<WtParams>,
     state: Arc<Mutex<WtState>>,
@@ -211,6 +220,11 @@ impl Plugin for WavetableDesigner {
     }
 }
 
+/// Advance `phase` by one sample and return the linearly-interpolated value
+/// from `table` at the current phase position.
+///
+/// `phase` is maintained in the range `[0, 1)`.  The table is assumed to
+/// contain exactly [`app_state::WT_SIZE`] samples representing one full cycle.
 fn sample_from_table(phase: &mut f32, freq: f32, sample_rate: f32, table: &[f32]) -> f32 {
     let phase_inc = freq / sample_rate;
     let idx_f = *phase * app_state::WT_SIZE as f32;
