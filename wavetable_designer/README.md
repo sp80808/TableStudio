@@ -17,6 +17,11 @@ cargo xtask bundle wavetable_designer --release
 - **Edit-Drone**: plays a chosen note **only while dragging** in the editor
 - **MIDI**: monophonic input, last-note wins, velocity controls amplitude
 
+## Wavetable Editing
+- Multi-frame grid (8x8) with active frame selection and keyframe markers.
+- Harmonics view with FFT operations via context menu (clear/randomize/even/odd).
+- Spectral controls are exposed as WIP (UI only, evolving DSP).
+
 ## Dev Workflow
 If you have `just` installed:
 ```shell
@@ -26,4 +31,3 @@ just fmt
 just clippy
 just test
 ```
-

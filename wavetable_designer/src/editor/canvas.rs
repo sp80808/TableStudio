@@ -1,3 +1,4 @@
+use crate::app_state::{WtState, WT_SIZE};
 use crate::dsp::{
     apply_fm_stack, compute_harmonics, fft_clear_all, fft_clear_hf,
     fft_clear_lf, fft_draw_even_only, fft_draw_odd_only, fft_generate_saw, fft_randomize_bins,

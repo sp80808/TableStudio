@@ -1,7 +1,7 @@
 # Wavetable Designer: Architecture + Development Notes
 
 ## Overview
-Wavetable Designer is a NIH-plug based wavetable editor with an egui UI. It currently supports multi-frame wavetable editing, harmonics preview, and live audio preview modes.
+Wavetable Designer is a NIH-plug based wavetable editor with an egui UI. It supports multi-frame wavetable editing, harmonics preview, live audio preview modes, and early-stage spectral tooling (WIP).
 
 ## Repository layout
 - `src/lib.rs`: Plugin implementation, audio preview, MIDI input handling.
@@ -14,11 +14,12 @@ Wavetable Designer is a NIH-plug based wavetable editor with an egui UI. It curr
 - `docs/accelerators.md`: Porting notes and upstream references.
 
 ## Current functionality
-- Multi-frame wavetable grid (default 8x8), with active frame selection.
+- Multi-frame wavetable grid (default 8x8), with active frame selection and keyframe markers.
 - Dual display of raw + baked waveform, drag-to-edit.
-- Harmonics view using FFT.
+- Harmonics view using FFT with context-menu FFT operations (clear, randomize, even/odd).
 - Preview modes: Off / Edit-Drone / MIDI (monophonic).
 - WAV import/export for current frame or all frames.
+- Spectral controls exposed in UI (WIP) with a processing stub in `dsp.rs`.
 
 ## Key data flow
 - `WtState` contains frame data and preview settings. `active_frame` selects edit target.
@@ -31,7 +32,7 @@ Wavetable Designer is a NIH-plug based wavetable editor with an egui UI. It curr
 - `rfd`: native file dialogs
 - `parking_lot`: fast mutex for shared state
 - `rustfft`: FFT for harmonics view
-- `egui_plot`: plot utilities (currently unused after custom harmonics draw)
+- `num-complex`: FFT complex math
 
 ## Next improvements (optional)
 - Add undo/redo for waveform edits.

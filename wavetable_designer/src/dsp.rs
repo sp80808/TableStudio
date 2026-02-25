@@ -1,4 +1,4 @@
-use crate::app_state::{WtState, WT_SIZE};
+use crate::app_state::{MorphMode, PreviewMode, WavetableFrame, WtState, WT_SIZE};
 use num_complex::Complex;
 use rustfft::FftPlanner;
 use std::f32::consts::TAU;
@@ -44,10 +44,7 @@ fn bake_frame(raw: &[f32], state: &WtState) -> Vec<f32> {
     baked
 }
 
-fn apply_spectral_fx(_samples: &mut [f32], _state: &WtState) {
-    // Placeholder for upcoming spectral processing (formant, smear, stretch, warp).
-    // Kept as a no-op for now to preserve the control surface without changing audio.
-}
+
 
 pub fn apply_fm_stack(raw: &[f32], ratio: f32, amount: f32, mod_shape: usize) -> Vec<f32> {
     let len = raw.len();
@@ -116,7 +113,6 @@ pub fn note_to_freq(note: u8, detune_cents: f32) -> f32 {
     base * ratio
 }
 
-#[allow(dead_code)]
 pub fn forward_fft(samples: &[f32]) -> Vec<Complex<f32>> {
     let len = samples.len();
     if len == 0 {
@@ -132,7 +128,6 @@ pub fn forward_fft(samples: &[f32]) -> Vec<Complex<f32>> {
     buffer
 }
 
-#[allow(dead_code)]
 pub fn inverse_fft(bins: &[Complex<f32>]) -> Vec<f32> {
     let len = bins.len();
     if len == 0 {
@@ -147,7 +142,6 @@ pub fn inverse_fft(bins: &[Complex<f32>]) -> Vec<f32> {
     buffer.iter().map(|c| c.re * scale).collect()
 }
 
-#[allow(dead_code)]
 pub fn enforce_conjugate_symmetry(bins: &mut [Complex<f32>]) {
     let len = bins.len();
     if len <= 1 {
@@ -229,28 +223,105 @@ pub fn fft_draw_odd_only(bins: &mut [Complex<f32>]) {
     enforce_conjugate_symmetry(bins);
 }
 
-pub fn spectral_morph_preview(a: &[f32], b: &[f32], amount: f32) -> Vec<f32> {
-    let len = a.len().min(b.len());
-    if len == 0 {
-        return Vec::new();
+pub fn morph_crossfade(frames: &mut [WavetableFrame], start_idx: usize, end_idx: usize) {
+    if start_idx >= end_idx { return; }
+    let steps = end_idx - start_idx;
+    
+    let a_raw = frames[start_idx].raw.clone();
+    let b_raw = frames[end_idx].raw.clone();
+    let len = a_raw.len().min(b_raw.len());
+
+    for step in 1..steps {
+        let t = step as f32 / steps as f32;
+        let mut out = vec![0.0; len];
+        for i in 0..len {
+            out[i] = a_raw[i] * (1.0 - t) + b_raw[i] * t;
+        }
+        frames[start_idx + step].raw = out;
+        frames[start_idx + step].is_keyframe = false;
+    }
+}
+
+pub fn morph_spectral(frames: &mut [WavetableFrame], start_idx: usize, end_idx: usize, zero_phase: bool) {
+    if start_idx >= end_idx { return; }
+    let steps = end_idx - start_idx;
+    
+    let a_raw = frames[start_idx].raw.clone();
+    let b_raw = frames[end_idx].raw.clone();
+    let len = a_raw.len().min(b_raw.len());
+
+    let a_bins = forward_fft(&a_raw[..len]);
+    let b_bins = forward_fft(&b_raw[..len]);
+
+    for step in 1..steps {
+        let t = step as f32 / steps as f32;
+        let mut out_bins = Vec::with_capacity(len);
+
+        for i in 0..len {
+            let mag_a = a_bins[i].norm();
+            let mag_b = b_bins[i].norm();
+            let phase = if zero_phase { 
+                0.0 
+            } else {
+                a_bins[i].arg() * (1.0 - t) + b_bins[i].arg() * t 
+            };
+            
+            let mag = mag_a * (1.0 - t) + mag_b * t;
+            out_bins.push(Complex::from_polar(mag, phase));
+        }
+
+        enforce_conjugate_symmetry(&mut out_bins);
+        frames[start_idx + step].raw = inverse_fft(&out_bins);
+        frames[start_idx + step].is_keyframe = false;
+    }
+}
+
+pub fn execute_morph(frames: &mut [WavetableFrame], mode: MorphMode) {
+    // Find keyframes
+    let mut keyframes = Vec::new();
+    for (i, frame) in frames.iter().enumerate() {
+        if frame.is_keyframe {
+            keyframes.push(i);
+        }
     }
 
-    let amount = amount.clamp(0.0, 1.0);
-    let a_bins = forward_fft(&a[..len]);
-    let b_bins = forward_fft(&b[..len]);
-
-    let mut out_bins = Vec::with_capacity(len);
-    for i in 0..len {
-        let mag_a = a_bins[i].norm();
-        let mag_b = b_bins[i].norm();
-        let phase = a_bins[i].arg();
-        let mag = mag_a + (mag_b - mag_a) * amount;
-        out_bins.push(Complex::from_polar(mag, phase));
+    if keyframes.is_empty() { return; }
+    if keyframes.len() == 1 {
+        // If only 1 keyframe, copy it everywhere
+        let first = keyframes[0];
+        let shape = frames[first].raw.clone();
+        for frame in frames.iter_mut() {
+            if !frame.is_keyframe {
+                frame.raw = shape.clone();
+            }
+        }
+        return;
     }
-    enforce_conjugate_symmetry(&mut out_bins);
-    let mut out = inverse_fft(&out_bins);
-    normalize_samples_in_place(&mut out);
-    out
+
+    // Interpolate between pairs of keyframes
+    for pair in keyframes.windows(2) {
+        let start = pair[0];
+        let end = pair[1];
+        
+        match mode {
+            MorphMode::Crossfade => morph_crossfade(frames, start, end),
+            MorphMode::Spectral => morph_spectral(frames, start, end, false),
+            MorphMode::SpectralZeroPhase => morph_spectral(frames, start, end, true),
+        }
+    }
+
+    // Extrapolate edges
+    let first = keyframes[0];
+    let first_shape = frames[first].raw.clone();
+    for i in 0..first {
+        frames[i].raw = first_shape.clone();
+    }
+
+    let last = keyframes[keyframes.len() - 1];
+    let last_shape = frames[last].raw.clone();
+    for i in (last + 1)..frames.len() {
+        frames[i].raw = last_shape.clone();
+    }
 }
 
 pub fn apply_spectral_fx(samples: &mut [f32], state: &WtState) {

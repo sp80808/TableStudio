@@ -11,6 +11,13 @@ pub enum PreviewMode {
     Midi = 2,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum MorphMode {
+    Crossfade,
+    Spectral,
+    SpectralZeroPhase,
+}
+
 impl PreviewMode {
     pub fn label(self) -> &'static str {
         match self {

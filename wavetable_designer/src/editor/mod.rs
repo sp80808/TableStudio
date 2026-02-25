@@ -1,5 +1,5 @@
-use crate::app_state::{WtState, WT_SIZE};
-use crate::dsp::bake_wavetable;
+use crate::app_state::{MorphMode, WtState, WT_SIZE};
+use crate::dsp::{bake_wavetable, execute_morph};
 use crate::WtParams;
 use hound::SampleFormat;
 use nih_plug_egui::egui::{self};
@@ -86,6 +86,25 @@ pub fn draw_ui(
                     }
                 }
             }
+
+            ui.separator();
+            ui.menu_button("MORPH", |ui| {
+                if ui.button("Morph - Crossfade").clicked() {
+                    execute_morph(&mut state_guard.frames, MorphMode::Crossfade);
+                    needs_bake = true;
+                    ui.close_menu();
+                }
+                if ui.button("Morph - Spectral").clicked() {
+                    execute_morph(&mut state_guard.frames, MorphMode::Spectral);
+                    needs_bake = true;
+                    ui.close_menu();
+                }
+                if ui.button("Morph - Spectral (Zero All Phases)").clicked() {
+                    execute_morph(&mut state_guard.frames, MorphMode::SpectralZeroPhase);
+                    needs_bake = true;
+                    ui.close_menu();
+                }
+            });
         });
 
         ui.separator();
