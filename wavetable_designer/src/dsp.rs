@@ -184,12 +184,16 @@ pub fn enforce_conjugate_symmetry(bins: &mut [Complex<f32>]) {
 }
 
 // FFT Context Menu Operations
+/// Clears all stored magnitude and phase data from the frequency domain.
 pub fn fft_clear_all(bins: &mut [Complex<f32>]) {
     for b in bins.iter_mut() {
         *b = Complex::new(0.0, 0.0);
     }
 }
 
+/// Sets the high-frequency harmonics (from `start_bin` to Nyquist) to 0.0.
+/// 
+/// Also guarantees that the resulting time-domain wave remains purely real by enforcing symmetry.
 pub fn fft_clear_hf(bins: &mut [Complex<f32>], start_bin: usize) {
     let len = bins.len();
     if start_bin >= len / 2 { return; }
@@ -199,6 +203,7 @@ pub fn fft_clear_hf(bins: &mut [Complex<f32>], start_bin: usize) {
     enforce_conjugate_symmetry(bins);
 }
 
+/// Sets the low-frequency harmonics (from index 1 to `end_bin`) to 0.0.
 pub fn fft_clear_lf(bins: &mut [Complex<f32>], end_bin: usize) {
     let len = bins.len();
     let end = end_bin.min(len / 2);
@@ -208,6 +213,8 @@ pub fn fft_clear_lf(bins: &mut [Complex<f32>], end_bin: usize) {
     enforce_conjugate_symmetry(bins);
 }
 
+/// Overwrites the FFT spectrum with an ideal descending sawtooth harmonic series.
+/// Amplitude falls off at a rate of 1/n.
 pub fn fft_generate_saw(bins: &mut [Complex<f32>]) {
     let len = bins.len();
     for i in 1..(len / 2) {
@@ -219,6 +226,7 @@ pub fn fft_generate_saw(bins: &mut [Complex<f32>]) {
     enforce_conjugate_symmetry(bins);
 }
 
+/// Randomizes both the magnitude and phase of the lowest `num_bins`.
 pub fn fft_randomize_bins(bins: &mut [Complex<f32>], num_bins: usize) {
     let len = bins.len();
     let end = num_bins.min(len / 2);
@@ -230,6 +238,7 @@ pub fn fft_randomize_bins(bins: &mut [Complex<f32>], num_bins: usize) {
     enforce_conjugate_symmetry(bins);
 }
 
+/// Clears all ODD numbered harmonics. Resulting waveforms sound 'hollow' (like square waves).
 pub fn fft_draw_even_only(bins: &mut [Complex<f32>]) {
     let len = bins.len();
     for i in 1..(len / 2) {
@@ -240,6 +249,7 @@ pub fn fft_draw_even_only(bins: &mut [Complex<f32>]) {
     enforce_conjugate_symmetry(bins);
 }
 
+/// Clears all EVEN numbered harmonics, resulting in a wave one octave down.
 pub fn fft_draw_odd_only(bins: &mut [Complex<f32>]) {
     let len = bins.len();
     for i in 1..(len / 2) {
@@ -250,6 +260,7 @@ pub fn fft_draw_odd_only(bins: &mut [Complex<f32>]) {
     enforce_conjugate_symmetry(bins);
 }
 
+/// Replaces intermediate frame values linearly by crossfading `start_idx` and `end_idx` frames.
 pub fn morph_crossfade(frames: &mut [WavetableFrame], start_idx: usize, end_idx: usize) {
     if start_idx >= end_idx { return; }
     let steps = end_idx - start_idx;
@@ -269,6 +280,10 @@ pub fn morph_crossfade(frames: &mut [WavetableFrame], start_idx: usize, end_idx:
     }
 }
 
+/// Generates intermediate frames between `start_idx` and `end_idx` via spectral interpolation.
+/// 
+/// If `zero_phase` is enabled, all frequency bins will be forced to 0.0 angle resulting in sharp transients.
+/// Otherwise, raw phases are linearly interpolated between keyframes as well as magnitude.
 pub fn morph_spectral(frames: &mut [WavetableFrame], start_idx: usize, end_idx: usize, zero_phase: bool) {
     if start_idx >= end_idx { return; }
     let steps = end_idx - start_idx;
@@ -303,6 +318,8 @@ pub fn morph_spectral(frames: &mut [WavetableFrame], start_idx: usize, end_idx: 
     }
 }
 
+/// Discovers `is_keyframe` breakpoints in the entire Wavetable array and 
+/// systematically connects them via the `MorphMode` provided.
 pub fn execute_morph(frames: &mut [WavetableFrame], mode: MorphMode) {
     // Find keyframes
     let mut keyframes = Vec::new();

@@ -20,10 +20,14 @@ pub enum PreviewMode {
     Midi = 2,
 }
 
+/// Defines how intermediate wavetable frames are interpolated when connecting keyframes.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum MorphMode {
+    /// Time-domain linear interpolation between samples.
     Crossfade,
+    /// Frequency-domain interpolation of magnitude and phase spectra independently.
     Spectral,
+    /// Spectral interpolation with all phase angles forced to 0.0 (Laser/Harsh effect).
     SpectralZeroPhase,
 }
 
@@ -38,14 +42,13 @@ impl PreviewMode {
     }
 }
 
-/// A single wavetable frame storing both the user-drawn raw samples and the
-/// processed (baked) output samples.
+/// A single slice of the 3D wavetable containing raw and fully-processed DSP arrays.
 ///
 /// Both `raw` and `baked` always contain exactly [`WT_SIZE`] `f32` samples in
 /// the range `[-1.0, 1.0]`.
 #[derive(Clone)]
 pub struct WavetableFrame {
-    /// Samples as drawn by the user (before the FM / effects chain).
+    /// The un-processed core shape (what the user draws explicitly).
     pub raw: Vec<f32>,
     /// Samples after the bake pipeline (FM stacking → fundamental boost →
     /// wavefold → normalisation).  This is what the audio engine reads.

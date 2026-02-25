@@ -6,12 +6,10 @@
 //! so the Edit-Drone preview sounds while the mouse button is held.
 
 use crate::app_state::{WtState, WT_SIZE};
-use crate::dsp::compute_harmonics;
-use crate::app_state::{WtState, WT_SIZE};
 use crate::dsp::{
     apply_fm_stack, compute_harmonics, fft_clear_all, fft_clear_hf,
     fft_clear_lf, fft_draw_even_only, fft_draw_odd_only, fft_generate_saw, fft_randomize_bins,
-    forward_fft, inverse_fft, spectral_morph_preview,
+    forward_fft, inverse_fft,
 };
 use nih_plug_egui::egui::{self, Color32, Pos2, Rect, Sense, Stroke, Vec2};
 
@@ -45,11 +43,7 @@ pub fn draw_canvas(ui: &mut egui::Ui, _ctx: &egui::Context, state: &mut WtState)
         let frame = state.active_frame();
 
         let fm_preview = apply_fm_stack(&frame.raw, state.fm_ratio, state.fm_amount, state.mod_shape);
-        let spectral_preview = spectral_morph_preview(
-            &frame.raw,
-            &fm_preview,
-            state.spectral_morph_amount,
-        );
+
 
         let mut raw_points = Vec::with_capacity(WT_SIZE);
         for (i, &sample) in frame.raw.iter().enumerate() {
@@ -69,14 +63,6 @@ pub fn draw_canvas(ui: &mut egui::Ui, _ctx: &egui::Context, state: &mut WtState)
             Stroke::new(2.4, Color32::from_rgb(255, 140, 0)),
         ));
 
-        let mut spectral_points = Vec::with_capacity(WT_SIZE);
-        for (i, &sample) in spectral_preview.iter().enumerate() {
-            spectral_points.push(sample_to_pos(rect, i, sample));
-        }
-        painter.add(egui::Shape::line(
-            spectral_points,
-            Stroke::new(2.0, Color32::from_rgb(170, 80, 255)),
-        ));
     }
 
     if response.dragged() || response.clicked() {
@@ -97,6 +83,18 @@ pub fn draw_canvas(ui: &mut egui::Ui, _ctx: &egui::Context, state: &mut WtState)
     }
 
     state.edit_gate = response.dragged();
+
+    ui.add_space(4.0);
+    ui.horizontal(|ui| {
+        ui.label(egui::RichText::new("RAW").color(Color32::from_rgb(50, 150, 255)));
+        ui.label(egui::RichText::new("FM").color(Color32::from_rgb(255, 140, 0)));
+        ui.label(egui::RichText::new("SPECTRAL").color(Color32::from_rgb(170, 80, 255)));
+        ui.label(
+            egui::RichText::new("Drag to sculpt.")
+                .color(Color32::from_gray(140))
+                .size(11.0),
+        );
+    });
 
     ui.add_space(8.0);
     needs_bake |= draw_harmonics(ui, state);

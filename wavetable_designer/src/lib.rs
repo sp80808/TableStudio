@@ -8,7 +8,6 @@ mod app_state;
 mod dsp;
 mod editor;
 pub mod widgets;
-mod widgets;
 
 use app_state::{PreviewMode, WtState};
 use dsp::note_to_freq;
