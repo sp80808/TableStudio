@@ -114,8 +114,15 @@ See [`docs/architecture.md`](wavetable_designer/docs/architecture.md) for a more
 
 ---
 
+## Support the project
+
+TableStudio stays MIT-licensed and open-source. If it helps your sound-design workflow, you can support Harry / SP8 Audio with a [one-time £10 contribution](https://buy.stripe.com/28E7sKcm477S5FTaIn3ZK0g).
+
+For organisations or brands that want to support the wider free wavetable-tool work at a higher level, there is also a [£99 one-time Waved Studio Founding Sponsor option](https://buy.stripe.com/bJe3cu1Hq0Juc4hdUz3ZK0i), including an optional supporter credit for 12 months.
+
+---
+
 ## License
 
 MIT — see [`wavetable_designer/Cargo.toml`](wavetable_designer/Cargo.toml) for the declared license.  
 Note: `nih_plug` and its egui integration are MIT-licensed upstream.
-
